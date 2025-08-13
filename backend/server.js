@@ -8,18 +8,25 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
+// Root route for Render test
 app.get("/", (req, res) => {
-  res.json({ app: "Farmer GPT", status: "ok", by: "ChatGPT", time: new Date().toISOString() });
+  res.send(`
+    <h1>✅ Farmer GPT Backend is Running</h1>
+    <p>Status: OK</p>
+    <p>Server Time: ${new Date().toISOString()}</p>
+  `);
 });
 
+// Health check
 app.get("/api/health", (req, res) => {
   res.json({ status: "healthy", by: "ChatGPT" });
 });
 
+// Echo test
 app.post("/api/echo", (req, res) => {
   res.json({ youSent: req.body, by: "ChatGPT" });
 });
 
 app.listen(PORT, () => {
-  console.log(`✅ Backend running at http://localhost:${PORT}`);
+  console.log(`Server is running on port ${PORT}`);
 });
