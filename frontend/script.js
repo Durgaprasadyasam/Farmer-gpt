@@ -1,32 +1,42 @@
-// Frontend JS (Made by ChatGPT)
-const BACKEND_URL = "https://YOUR-BACKEND-NAME.onrender.com";
+// --- CONFIG: set your backend base URL (NO trailing slash) ---
+const BACKEND_URL = "https://farmer-gpt.onrender.com";
 
-const statusEl = document.getElementById("status");
-const echoInput = document.getElementById("echoInput");
-const sendBtn = document.getElementById("sendBtn");
-const echoOut = document.getElementById("echoOut");
+// small helper
+const $ = (sel) => document.querySelector(sel);
 
-(async () => {
+async function checkHealth() {
+  const statusEl = $("#status");
+  statusEl.textContent = "Connecting to backend...";
   try {
-    const r = await fetch(`${BACKEND_URL}/api/health`);
-    const data = await r.json();
-    statusEl.textContent = "Backend says: " + JSON.stringify(data);
-  } catch {
-    statusEl.textContent = "Could not reach backend. Is it running on port 3001?";
+    const res = await fetch(`${BACKEND_URL}/api/health`, { cache: "no-store" });
+    if (!res.ok) throw new Error(res.status);
+    const data = await res.json();
+    statusEl.textContent = `Backend says: ${data.status}`;
+  } catch (e) {
+    statusEl.textContent = "Could not reach backend. Is it running?";
+    console.error("Health check failed:", e);
   }
-})();
+}
 
-sendBtn.addEventListener("click", async () => {
+async function sendEcho() {
+  const input = $("#echo-input").value || "";
+  const out = $("#echo-output");
+  out.textContent = "…sending…";
   try {
-    const body = { message: echoInput.value || "hello from frontend" };
-    const r = await fetch(`${BACKEND_URL}/api/echo`, {
+    const res = await fetch(`${BACKEND_URL}/api/echo`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
+      body: JSON.stringify({ text: input })
     });
-    const data = await r.json();
-    echoOut.textContent = JSON.stringify(data, null, 2);
+    if (!res.ok) throw new Error(res.status);
+    const data = await res.json();
+    out.textContent = data.echo ?? JSON.stringify(data);
   } catch (e) {
-    echoOut.textContent = "Error calling backend: " + e.message;
+    out.textContent = `Error: ${e}`;
   }
+}
+
+window.addEventListener("DOMContentLoaded", () => {
+  checkHealth();
+  $("#echo-btn").addEventListener("click", sendEcho);
 });
