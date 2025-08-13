@@ -1,128 +1,112 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Farmer GPT – Frontend</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            margin: 0;
-            padding: 0;
-        }
-        header {
-            background-color: #4CAF50;
-            color: white;
-            text-align: center;
-            padding: 1rem;
-        }
-        .container {
-            max-width: 800px;
-            margin: 2rem auto;
-            background: white;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        .status {
-            text-align: center;
-            font-weight: bold;
-            margin-bottom: 1rem;
-        }
-        .status.online {
-            color: green;
-        }
-        .status.offline {
-            color: red;
-        }
-        .form-group {
-            display: flex;
-            gap: 0.5rem;
-        }
-        input[type="text"] {
-            flex: 1;
-            padding: 0.5rem;
-            font-size: 1rem;
-        }
-        button {
-            padding: 0.5rem 1rem;
-            font-size: 1rem;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
-        .response {
-            margin-top: 1rem;
-            padding: 1rem;
-            background: #f9f9f9;
-            border-radius: 4px;
-            min-height: 2rem;
-        }
+      body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:#f6f7f9;margin:0}
+      header{background:#2e7d32;color:#fff;padding:20px 16px;text-align:center;font-weight:700}
+      .status{margin-top:8px;font-size:14px}
+      .ok{color:#00c853;font-weight:700}
+      .bad{color:#ff1744;font-weight:700}
+      main{max-width:760px;margin:24px auto;padding:0 16px}
+      .card{background:#fff;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.08);padding:16px 16px 20px}
+      .row{display:flex;gap:8px;margin-top:10px}
+      input[type="text"]{flex:1;padding:10px 12px;border:1px solid #cfd8dc;border-radius:6px;font-size:15px}
+      button{padding:10px 16px;border:0;border-radius:6px;background:#2e7d32;color:#fff;font-weight:600;cursor:pointer}
+      button:disabled{opacity:.6;cursor:not-allowed}
+      .resp{margin-top:14px;padding:10px 12px;background:#f1f8e9;border:1px solid #c5e1a5;border-radius:6px;min-height:22px}
+      .muted{color:#78909c}
+      footer{color:#607d8b;text-align:center;margin:28px 0 18px}
+      a{color:#2e7d32;text-decoration:none}
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <header>
-        <h1>Farmer GPT – Frontend</h1>
-        <div id="backend-status" class="status">Checking backend status...</div>
+      Farmer GPT – Frontend
+      <div id="backendStatus" class="status">Checking backend…</div>
     </header>
-    <div class="container">
-        <h2>Echo tester</h2>
+
+    <main>
+      <section class="card">
+        <h3>Echo tester</h3>
         <p>Send a message to the backend and see the echoed response.</p>
-        <div class="form-group">
-            <input type="text" id="echo-input" placeholder="Type something..." />
-            <button onclick="sendEcho()">Send</button>
+        <div class="row">
+          <input id="echoInput" type="text" placeholder="Type something…" />
+          <button id="sendBtn">Send</button>
         </div>
-        <div id="echo-response" class="response">(No response)</div>
-    </div>
+        <div id="echoResp" class="resp muted">(No response)</div>
+      </section>
+    </main>
+
+    <footer>
+      Backend URL: <span id="backendUrl"></span>
+    </footer>
 
     <script>
-        const BACKEND_URL = "https://farmer-gpt-3.onrender.com";
+      // >>>>>>>>>>>>>>>>>>>> ONLY CHANGE THIS LINE WHEN YOU MOVE BACKEND <<<<<<<<<<<<<<<<<<
+      const BACKEND_BASE = "https://farmer-gpt-3.onrender.com";
+      // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
-        async function checkBackendStatus() {
-            try {
-                const res = await fetch(`${BACKEND_URL}/status`);
-                if (res.ok) {
-                    document.getElementById("backend-status").textContent = "Backend: Online ✔";
-                    document.getElementById("backend-status").classList.add("online");
-                } else {
-                    document.getElementById("backend-status").textContent = "Backend: Offline ✖";
-                    document.getElementById("backend-status").classList.add("offline");
-                }
-            } catch (error) {
-                document.getElementById("backend-status").textContent = "Backend: Offline ✖";
-                document.getElementById("backend-status").classList.add("offline");
-            }
+      document.getElementById("backendUrl").textContent = BACKEND_BASE;
+
+      const statusEl = document.getElementById("backendStatus");
+      const echoEl   = document.getElementById("echoResp");
+      const sendBtn  = document.getElementById("sendBtn");
+      const input    = document.getElementById("echoInput");
+
+      async function checkHealth() {
+        try {
+          const res = await fetch(`${BACKEND_BASE}/health`, { method: "GET" , cache: "no-store"});
+          if (!res.ok) throw new Error("not ok");
+          const data = await res.json().catch(()=>({}));
+          statusEl.innerHTML = `<span class="ok">Backend Online ✓</span>`;
+          return true;
+        } catch (e) {
+          statusEl.innerHTML = `<span class="bad">Backend Offline ✕</span>`;
+          return false;
         }
+      }
 
-        async function sendEcho() {
-            const input = document.getElementById("echo-input").value.trim();
-            if (!input) {
-                alert("Please enter a message.");
-                return;
-            }
-            try {
-                const res = await fetch(`${BACKEND_URL}/echo`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ message: input })
-                });
-                if (res.ok) {
-                    const data = await res.json();
-                    document.getElementById("echo-response").textContent = JSON.stringify(data);
-                } else {
-                    document.getElementById("echo-response").textContent = "Error from backend.";
-                }
-            } catch (error) {
-                document.getElementById("echo-response").textContent = "Failed to reach backend.";
-            }
+      async function sendEcho() {
+        const message = input.value.trim();
+        if (!message) {
+          echoEl.textContent = "(Type something first)";
+          echoEl.classList.add("muted");
+          return;
         }
+        echoEl.textContent = "Sending…";
+        echoEl.classList.remove("muted");
+        sendBtn.disabled = true;
+        try {
+          // Try POST /echo first; if it fails, fall back to GET /echo?message=
+          let res = await fetch(`${BACKEND_BASE}/echo`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message })
+          });
+          if (!res.ok) {
+            // fallback GET
+            res = await fetch(`${BACKEND_BASE}/echo?message=${encodeURIComponent(message)}`);
+          }
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const data = await res.json();
+          // accept either {echo:"…"} or {message:"…"}
+          const out = data.echo ?? data.message ?? JSON.stringify(data);
+          echoEl.textContent = out;
+        } catch (err) {
+          echoEl.textContent = `Request failed: ${err.message}`;
+        } finally {
+          sendBtn.disabled = false;
+        }
+      }
 
-        checkBackendStatus();
+      sendBtn.addEventListener("click", sendEcho);
+      input.addEventListener("keydown", (e)=>{ if (e.key === "Enter") sendEcho(); });
+
+      // Kick off health check right away
+      checkHealth();
     </script>
-</body>
+  </body>
 </html>
