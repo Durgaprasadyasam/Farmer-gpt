@@ -1,11 +1,13 @@
 {
   "name": "farmer-gpt-backend",
-  "version": "0.1.0",
-  "type": "module",
+  "version": "1.0.0",
+  "description": "Simple Express backend for Farmer GPT (health + echo endpoints).",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node --watch server.js"
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
   },
   "dependencies": {
     "cors": "^2.8.5",
