@@ -5,29 +5,25 @@ const cors = require("cors");
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// CORS — allow your static site (or all during dev)
-app.use(cors({ origin: true })); // you can restrict later: { origin: "https://YOUR-FRONTEND-DOMAIN" }
-app.use(express.json());
+// allow browser calls
+app.use(cors({ origin: true }));
+app.use(express.json());           // <-- required for POST JSON
 
-// health check used by the frontend banner
+// Health used by frontend banner
 app.get("/health", (req, res) => {
   res.json({ ok: true, service: "farmer-gpt-backend" });
 });
 
-// echo endpoint supports both GET and POST
+// Echo supports both GET and POST; always return JSON
 app.get("/echo", (req, res) => {
-  const message = req.query.message ?? "";
-  res.json({ message });
+  res.json({ message: String(req.query.message ?? "") });
 });
 
 app.post("/echo", (req, res) => {
-  const message = req.body?.message ?? "";
-  res.json({ echo: message });
+  res.json({ echo: String(req.body?.message ?? "") });
 });
 
-// optional root
+// Optional: keep your existing /json route too
 app.get("/", (req, res) => res.send("Hello from Farmer GPT backend"));
 
-app.listen(PORT, () => {
-  console.log(`Backend listening on port ${PORT}`);
-});
+app.listen(PORT, () => console.log(`Listening on ${PORT}`));
