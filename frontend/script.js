@@ -1,5 +1,5 @@
 // Frontend JS (Made by ChatGPT)
-const BACKEND_URL = "http://farmer-gpt-1.onrender.com";
+const BACKEND_URL = "https://YOUR-BACKEND-NAME.onrender.com";
 
 const statusEl = document.getElementById("status");
 const echoInput = document.getElementById("echoInput");
