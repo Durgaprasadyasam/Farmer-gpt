@@ -1,29 +1,62 @@
-// server.js
+// Farmer GPT backend (CommonJS)
+// Works on Render and locally
+
 const express = require("express");
 const cors = require("cors");
 
 const app = express();
-const PORT = process.env.PORT || 10000;
 
-// allow browser calls
-app.use(cors({ origin: true }));
-app.use(express.json());           // <-- required for POST JSON
+// Allow JSON bodies
+app.use(express.json());
 
-// Health used by frontend banner
-app.get("/health", (req, res) => {
-  res.json({ ok: true, service: "farmer-gpt-backend" });
+// CORS: allow your static site on render.com and local dev
+const allowed = [
+  // add your static site origin(s) here if you want to restrict
+  // e.g. "https://farmer-gpt-3.onrender.com"
+];
+app.use(
+  cors({
+    origin: (origin, cb) => {
+      // Allow no-origin requests too (curl, same-origin on Render)
+      if (!origin || allowed.length === 0 || allowed.includes(origin)) {
+        return cb(null, true);
+      }
+      return cb(new Error("Not allowed by CORS"));
+    },
+    credentials: false
+  })
+);
+
+// --- Routes ---
+
+// Health check used by frontend: GET /api/health
+app.get("/api/health", (req, res) => {
+  res.json({
+    app: "Farmer GPT",
+    status: "healthy",
+    by: "ChatGPT",
+    time: new Date().toISOString()
+  });
 });
 
-// Echo supports both GET and POST; always return JSON
-app.get("/echo", (req, res) => {
-  res.json({ message: String(req.query.message ?? "") });
+// Echo endpoint used by frontend: POST /api/echo
+// Expects: { text: "hello" }  (we also accept { message: "..." } to be flexible)
+app.post("/api/echo", (req, res) => {
+  const text = req.body?.text ?? req.body?.message ?? "";
+  res.json({
+    echo: text,
+    time: new Date().toISOString()
+  });
 });
 
-app.post("/echo", (req, res) => {
-  res.json({ echo: String(req.body?.message ?? "") });
+// (Optional) Welcome at root
+app.get("/", (_req, res) => {
+  res.type("text").send("Farmer GPT backend is running. Try GET /api/health");
 });
 
-// Optional: keep your existing /json route too
-app.get("/", (req, res) => res.send("Hello from Farmer GPT backend"));
-
-app.listen(PORT, () => console.log(`Listening on ${PORT}`));
+// --- Start server ---
+// Render provides PORT; default to 3001 locally
+const PORT = process.env.PORT ? Number(process.env.PORT) : 3001;
+app.listen(PORT, () => {
+  console.log(`✅ Backend running at http://localhost:${PORT}`);
+});
