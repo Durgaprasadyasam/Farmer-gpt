@@ -1,62 +1,46 @@
-// Farmer GPT backend (CommonJS)
-// Works on Render and locally
-
 const express = require("express");
 const cors = require("cors");
 
 const app = express();
 
-// Allow JSON bodies
-app.use(express.json());
+// IMPORTANT: set this to your static site's URL so browsers can call the API
+const FRONTEND_URL = "https://farmer-gpt-3.onrender.com";
 
-// CORS: allow your static site on render.com and local dev
-const allowed = [
-  // add your static site origin(s) here if you want to restrict
-  // e.g. "https://farmer-gpt-3.onrender.com"
-];
+// CORS
 app.use(
   cors({
-    origin: (origin, cb) => {
-      // Allow no-origin requests too (curl, same-origin on Render)
-      if (!origin || allowed.length === 0 || allowed.includes(origin)) {
-        return cb(null, true);
-      }
-      return cb(new Error("Not allowed by CORS"));
-    },
-    credentials: false
+    origin: [FRONTEND_URL, "http://localhost:5500", "http://localhost:5173", "http://localhost:3000"],
+    methods: ["GET", "POST", "OPTIONS"],
+    allowedHeaders: ["Content-Type"],
   })
 );
 
-// --- Routes ---
+// JSON body parsing
+app.use(express.json());
 
-// Health check used by frontend: GET /api/health
-app.get("/api/health", (req, res) => {
+// Welcome
+app.get("/", (_req, res) => {
+  res.type("text/plain").send("Farmer GPT backend is running. Try GET /api/health");
+});
+
+// Health endpoint
+app.get("/api/health", (_req, res) => {
   res.json({
     app: "Farmer GPT",
     status: "healthy",
     by: "ChatGPT",
-    time: new Date().toISOString()
+    time: new Date().toISOString(),
   });
 });
 
-// Echo endpoint used by frontend: POST /api/echo
-// Expects: { text: "hello" }  (we also accept { message: "..." } to be flexible)
+// Echo endpoint
 app.post("/api/echo", (req, res) => {
-  const text = req.body?.text ?? req.body?.message ?? "";
-  res.json({
-    echo: text,
-    time: new Date().toISOString()
-  });
+  const text = (req.body && (req.body.text || req.body.message)) || "";
+  res.json({ echo: text, ok: true, time: new Date().toISOString() });
 });
 
-// (Optional) Welcome at root
-app.get("/", (_req, res) => {
-  res.type("text").send("Farmer GPT backend is running. Try GET /api/health");
-});
-
-// --- Start server ---
-// Render provides PORT; default to 3001 locally
-const PORT = process.env.PORT ? Number(process.env.PORT) : 3001;
+// Start server
+const PORT = process.env.PORT || 3001; // Render assigns PORT env var
 app.listen(PORT, () => {
-  console.log(`✅ Backend running at http://localhost:${PORT}`);
+  console.log(`✅ Backend running on port ${PORT}`);
 });
