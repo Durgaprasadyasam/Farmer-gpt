@@ -1,0 +1,21 @@
+# Node
+node_modules/
+npm-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+package-lock.json
+
+# Env & secrets
+.env
+.env.*
+!.env.example
+
+# Logs
+logs/
+*.log
+*.gz
+
+# Build/Test artifacts
+dist/
+build/
+coverage/
