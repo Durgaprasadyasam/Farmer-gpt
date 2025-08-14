@@ -1,7 +1,7 @@
 {
   "name": "farmer-gpt-backend",
   "version": "1.0.0",
-  "description": "Simple Express backend for Farmer GPT (health + echo endpoints).",
+  "description": "Simple API for Farmer GPT (health + echo)",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
